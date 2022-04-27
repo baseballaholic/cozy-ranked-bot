@@ -8,7 +8,6 @@ charset-normalizer==2.0.4
 discord==1.7.3
 discord.py==1.7.3
 idna==3.2
-multidict==5.1.0
 pymongo==4.0.2
 requests==2.26.0
 schedule==1.1.0
