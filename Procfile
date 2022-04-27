@@ -1,0 +1,1 @@
+worker: python CozyRanked.py
