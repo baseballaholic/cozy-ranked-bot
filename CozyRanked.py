@@ -378,6 +378,84 @@ async def resetseasonabcdefghijklmnopqrstuvwxyz(ctx):
     for i in range(len(registeredPlayers)):
         registeredPlayers[i].rank = i + 1
 
+@bot.command(pass_context=True)
+@commands.has_permissions(add_reactions=True)
+async def minus20(ctx,*,message):
+    global registeredPlayers
+    arr = message.split()
+    name = arr[-1]
+    for x in registeredPlayers:
+        if name == x.name:
+            x.rating-=20
+            await ctx.send(f"20 elo has been removed from {x.name}")
+
+@bot.command(pass_context=True)
+@commands.has_permissions(add_reactions=True)
+async def addstatsnoeloloss(ctx,*,message):
+    global registeredPlayers
+    teamOne = []
+    teamTwo = []
+    counter = 0
+    winner = 2
+    stats = message.split()
+    for y in range(len(stats)):
+        if stats[y] == "A":
+            a = stats[y + 1]
+            if a == "12":
+                winner = 0
+        if stats[y] == "B":
+            b = stats[y + 1]
+            if b == "12":
+                winner = 1
+
+    for i in range(len(stats)):
+        for x in registeredPlayers:
+            if stats[i] == x.name:
+                if (counter < 5):
+                    teamOne.append(x.name)
+                    counter += 1
+                else:
+                    teamTwo.append(x.name)
+                    counter += 1
+                if x.name in teamOne and winner == 0:
+                    ELO = 12
+                elif x.name in teamOne and winner == 1:
+                    ELO = -12
+                elif x.name in teamTwo and winner == 0:
+                    ELO = -12
+                elif x.name in teamTwo and winner == 1:
+                    ELO = 12
+                kd = stats[i + 1].split("-")
+
+                if (x.wins + x.losses) < 101:
+                    formula = x.rating + (int(kd[0]) - int(kd[1]) + ELO)
+                else:
+                    formula = x.rating + (
+                            (int(kd[0]) - int(kd[1]) + ELO) - ((x.kills - x.deaths) + 12 * (x.wins - x.losses)) / (
+                            x.wins + x.losses))
+                if(ELO == 12):
+                    x.kills += int(kd[0])
+                    x.deaths += int(kd[1])
+                    if ELO == 12:
+                        x.wins += 1
+                    if ELO == -12:
+                        x.losses += 1
+                    x.rating = formula
+    if counter != 10:
+        await ctx.send("Warning: Stats were entered with an unregistered player\n"
+                       "Please remove these stats, register all players, and then re-enter the stats")
+    registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
+    for i in range(len(registeredPlayers)):
+        registeredPlayers[i].rank = i + 1
+
+@bot_command(pass_context=True)
+@commands.has_permissions(send_tts_messages)
+async def top10kills(ctx):
+    global registeredPlayers
+    temp = []
+    temp = sorted(registeredPlayers, key=lambda Player: Player.kills, reverse=True)
+    for i in range(0, 10):
+        await ctx.send(f"{i+1}: {temp[i].name} - {temp[i].kills}")
 
 bot.run('ODM0NTg2NjY2NjQzMDk1NjEy.YIDDZw.K2kUP3g2cx1Apjv4y78rNhvPjxE')
 
