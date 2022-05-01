@@ -8,7 +8,7 @@ bot = commands.Bot(command_prefix= "-")
 registeredPlayers = []
 
 class Player(object):
-    def __init__(self, name, kills, deaths, wins, losses, rank, rating):
+    def __init__(self, name, kills, deaths, wins, losses, rank, rating, gp):
         self.name = name
         self.kills = kills
         self.deaths = deaths
@@ -16,9 +16,10 @@ class Player(object):
         self.losses = losses
         self.rank = rank
         self.rating = rating
+        self.gp = gp
 
     def __repr__(self):
-        return repr((self.name, self.kills, self.deaths, self.wins, self.losses, self.rank, self.rating))
+        return repr((self.name, self.kills, self.deaths, self.wins, self.losses, self.rank, self.rating, self.gp))
 
 
 
@@ -54,7 +55,7 @@ async def r(ctx,*,message):
     wl = 0
     true = 0
     for x in registeredPlayers:
-        if player == x.name:
+        if player.lower() == x.name.lower():
             true = 1
             if x.deaths != 0:
                 kd = round((x.kills/x.deaths), 3)
@@ -62,7 +63,7 @@ async def r(ctx,*,message):
                 wl = round((x.wins/x.losses)*100, 3)
             elif x.losses == 0 and x.wins > 0:
                 wl = 100
-            await ctx.send(f"{player} has rank {x.rank} with a rating of {x.rating} with a KDA of {kd}" \
+            await ctx.send(f"{x.name} has rank {x.rank} with a rating of {x.rating} with a KDA of {kd}" \
                  f" and a W/L of {x.wins}/{x.losses} ({wl}%)")
     if true == 0:
         await ctx.send("Invalid Player")
@@ -76,14 +77,14 @@ async def register(ctx,*,message):
     dupe = -2
     if uuid != "ERROR":
         for x in registeredPlayers:
-            if player == x.name:
+            if player.lower() == x.name.lower():
                 dupe = 1
         if dupe != 1:
-            app = Player(player, 0, 0, 0, 0, len(registeredPlayers)+1, 1500)
+            app = Player(player, 0, 0, 0, 0, len(registeredPlayers)+1, 1500, 0)
             registeredPlayers.append(app)
-            await ctx.send(f"{player} has been registered")
+            await ctx.send(f"{x.name} has been registered")
         else:
-            await ctx.send(f"{player} was already registered")
+            await ctx.send(f"{x.name} was already registered")
         registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
         for i in range(len(registeredPlayers)):
             registeredPlayers[i].rank = i + 1
@@ -188,7 +189,7 @@ async def delete(ctx,*,message):
     name = message.split()
     player = name[-1]
     for x in registeredPlayers:
-        if player == x.name:
+        if player.lower() == x.name.lower():
             registeredPlayers.remove(x)
             await ctx.send(f"{player} has been removed")
     registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
@@ -217,7 +218,7 @@ async def addstats(ctx,*,message):
 
     for i in range(len(stats)):
         for x in registeredPlayers:
-            if stats[i] == x.name:
+            if stats[i].lower() == x.name.lower():
                 if (counter < 5):
                     teamOne.append(x.name)
                     counter += 1
@@ -245,8 +246,10 @@ async def addstats(ctx,*,message):
                 x.deaths += int(kd[1])
                 if ELO == 12:
                     x.wins += 1
+                    x.gp += 1
                 if ELO == -12:
                     x.losses += 1
+                    x.gp += 1
                 x.rating = formula
     if counter != 10:
         await ctx.send("Warning: Stats were entered with an unregistered player\n"
@@ -276,7 +279,7 @@ async def removestats(ctx,*,message):
 
     for i in range(len(stats)):
         for x in registeredPlayers:
-            if stats[i] == x.name:
+            if stats[i].lower() == x.name.lower():
                 if (counter < 5):
                     teamOne.append(x.name)
                     counter += 1
@@ -304,8 +307,10 @@ async def removestats(ctx,*,message):
                 x.deaths -= int(kd[1])
                 if ELO == 12:
                     x.wins -= 1
+                    x.gp -= 1
                 if ELO == -12:
                     x.losses -= 1
+                    x.gp -= 1
                 x.rating = formula
     registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
     for i in range(len(registeredPlayers)):
@@ -340,6 +345,7 @@ async def set(ctx,*,message):
     losses = names[4]
     rank = names[5]
     rating = names[7]
+    gp = names[8]
     for x in registeredPlayers:
         if name == x.name:
             x.kills = kills
@@ -348,6 +354,7 @@ async def set(ctx,*,message):
             x.losses = losses
             x.rank = rank
             x.rating = rating
+            x.gp = gp
 
 @bot.command(pass_context=True)
 @commands.has_permissions(add_reactions=True)
@@ -357,10 +364,10 @@ async def botban(ctx):
         "Warning: This does not take into account if it has been 5 games since a players last bot ban\n")
     for x in registeredPlayers:
         if (x.deaths > 0):
-            if (x.wins + x.losses) >= 10 and (x.kills / x.deaths) < 0.5 and (x.wins / x.losses) < 0.5:
+            if (x.gp) >= 10 and (x.kills / x.deaths) < 0.5 and (x.wins / x.losses) < 0.5:
                 await ctx.send(
                     f"{x.name} needs a bot ban (KDR: {round((x.kills / x.deaths), 3)}) and WL: {round((x.wins / x.losses) * 100, 3)}\n")
-            elif (x.wins + x.losses) >= 5 and (x.kills / x.deaths) < 0.4:
+            elif (x.gp) >= 5 and (x.kills / x.deaths) < 0.4:
                 await ctx.send(
                     f"{x.name} needs a bot ban (KDR: {round((x.kills / x.deaths), 3)}) and WL: {round((x.wins / x.losses) * 100, 3)}\n")
 
@@ -374,6 +381,7 @@ async def resetseasonabcdefghijklmnopqrstuvwxyz(ctx):
         i.wins = 0
         i.losses = 0
         i.rating = 1500
+        i.gp = 0
     registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
     for i in range(len(registeredPlayers)):
         registeredPlayers[i].rank = i + 1
@@ -438,7 +446,9 @@ async def addstatsnoeloloss(ctx,*,message):
                     x.deaths += int(kd[1])
                     if ELO == 12:
                         x.wins += 1
+                        x.gp += 1
                     if ELO == -12:
+                        x.gp += 1
                         x.losses += 1
                     x.rating = formula
     if counter != 10:
@@ -448,14 +458,32 @@ async def addstatsnoeloloss(ctx,*,message):
     for i in range(len(registeredPlayers)):
         registeredPlayers[i].rank = i + 1
 
-@bot_command(pass_context=True)
-@commands.has_permissions(send_tts_messages)
+@bot.command(pass_context=True)
+@commands.has_permissions(send_tts_messages=True)
 async def top10kills(ctx):
     global registeredPlayers
     temp = []
     temp = sorted(registeredPlayers, key=lambda Player: Player.kills, reverse=True)
     for i in range(0, 10):
         await ctx.send(f"{i+1}: {temp[i].name} - {temp[i].kills}")
+
+@bot.command(pass_context=True)
+@commands.has_permissions(send_tts_messages=True)
+async def exportAllUsers(ctx):
+    file = open("rankedCvCPlayers.txt", "w")
+    for x in registeredPlayers:
+        file.write(f"{x.name}\n")
+    file.close()
+    await ctx.send("Users successfully exported")
+
+@bot.command(pass_context=True)
+@commands.has_permissions(send_tts_messages=True)
+async def importAllUsers(ctx,*,message):
+    file = open(message, "r")
+    lines = file.readlines()
+    for y in lines:
+        await register(ctx, message=y)
+    await ctx.send("Users successfully imported")
 
 bot.run('ODM0NTg2NjY2NjQzMDk1NjEy.YIDDZw.K2kUP3g2cx1Apjv4y78rNhvPjxE')
 
