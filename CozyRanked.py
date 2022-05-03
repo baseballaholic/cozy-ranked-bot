@@ -82,9 +82,9 @@ async def register(ctx,*,message):
         if dupe != 1:
             app = Player(player, 0, 0, 0, 0, len(registeredPlayers)+1, 1500, 0)
             registeredPlayers.append(app)
-            await ctx.send(f"{x.name} has been registered")
+            await ctx.send(f"{player} has been registered")
         else:
-            await ctx.send(f"{x.name} was already registered")
+            await ctx.send(f"{player} was already registered")
         registeredPlayers = sorted(registeredPlayers, key=lambda Player: Player.rating, reverse=True)
         for i in range(len(registeredPlayers)):
             registeredPlayers[i].rank = i + 1
@@ -339,13 +339,13 @@ async def set(ctx,*,message):
     global registeredPlayers
     names = message.split()
     name = names[0]
-    kills = names[1]
-    deaths = names[2]
-    wins = names[3]
-    losses = names[4]
-    rank = names[5]
-    rating = names[7]
-    gp = names[8]
+    kills = int(names[1])
+    deaths = int(names[2])
+    wins = int(names[3])
+    losses = int(names[4])
+    rank = int(names[5])
+    rating = int(names[6])
+    gp = int(names[7])
     for x in registeredPlayers:
         if name == x.name:
             x.kills = kills
@@ -484,6 +484,19 @@ async def importAllUsers(ctx,*,message):
     for y in lines:
         await register(ctx, message=y)
     await ctx.send("Users successfully imported")
+
+@bot.command(pass_context=True)
+async def captains(ctx,*,message):
+    global registeredPlayers
+    names = message.split()
+    captains = []
+    for i in names:
+        for x in registeredPlayers:
+            if i.lower() == x.name.lower():
+                captains.append(i)
+                if(len(captains) == 2):
+                    await ctx.send(f"Captains are {captains[0]} and {captains[1]}\n")
+                    return
 
 bot.run('ODM0NTg2NjY2NjQzMDk1NjEy.YIDDZw.K2kUP3g2cx1Apjv4y78rNhvPjxE')
 
