@@ -1002,8 +1002,7 @@ async def on_message(message):
     if message.content.startswith("-"):
         if audit is True:
             await channel.send(f'{message.author} used the command "{message.content}"')
-bot.run('OTA1MzU4NDY1NzQ3Mjg4MDY0.GS_PRD.z05C-mtNLihXWCYjn0RyG1n3_0DbBJlQYUyFJk')
-#ODM0NTg2NjY2NjQzMDk1NjEy.YIDDZw.K2kUP3g2cx1Apjv4y78rNhvPjxE
+bot.run(BOTTOKEN)
 
 
 
