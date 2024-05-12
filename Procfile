@@ -1,1 +1,1 @@
-worker: python CozyRanked.py
+worker: python cvcbotv3.py
